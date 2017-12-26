@@ -1,6 +1,7 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -62,26 +63,7 @@ public class P2 extends JPanel implements Runnable{
             }
     };
     public P2(){
-        byte buff[]=new byte[1024];
-        try {
-            ServerSocket svs = new ServerSocket(2525);
-            Socket s=svs.accept();
-            InputStream in=s.getInputStream();
-            int n=in.read(buff);
-            String str=new String(buff,0,n);
-            while(str!=null){
-                switch (str){
-                    case"@cmd-init":
-                        initmap();
-                        System.out.print("okk7" );
-                        str=null;
-                        System.out.print("ssssssss");
-                        break;
-                }
-            }
-        }catch (Exception e){
-
-        }
+        rec();
         this.setLayout(null);
         this.setBackground(new Color(63, 61, 64));
         /*   指定圖片檔位置   */
@@ -170,19 +152,11 @@ public class P2 extends JPanel implements Runnable{
         x=4;y=0;
         repaint();
     }
-    public int down_Shift(){
-        int down=0;
-        if(blow(x,y+1,blockType,turnState)==1){
-            y++;
-//            System.out.println(y);
-            down=1;
-        }repaint();
-        if (blow(x,y+1,blockType,turnState)==0&&blockPause<1){
-            blockPause++;
-        }else if(blow(x,y+1,blockType,turnState)==0&&blockPause>0){
-            down=0;
-        }
-        return down;
+    public void down_Shift(){
+        y++;
+        repaint();
+
+
     }
     public int blow(int x ,int y, int blockType,int turnState){
         for(int i=0;i<16;i++){
@@ -197,6 +171,17 @@ public class P2 extends JPanel implements Runnable{
         }
         return 1;
     }
+    public void fall_down(){
+        while (blow(x,y+1,blockType,turnState)==1){
+            y++;
+        }repaint();
+        if (blow(x,y+1,blockType,turnState)==0){
+
+            newBlock(nextblock);
+
+        }
+    }
+
     @Override
     public void run() {
         int i=0;
@@ -221,7 +206,7 @@ public class P2 extends JPanel implements Runnable{
                         initmap();
                         System.out.print("okk7\t" );
                         str=null;
-                        System.out.print("ssssssss");
+                        System.out.print("sss");
                         break;
                     case"next0":
                         System.out.print("0\t");
@@ -261,6 +246,11 @@ public class P2 extends JPanel implements Runnable{
                         break;
                     case"downshift();":
                         down_Shift();
+                        str=null;
+                        break;
+                    case "y++":
+                        y++;
+                        repaint();
                         str=null;
                         break;
                 }

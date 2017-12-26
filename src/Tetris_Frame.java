@@ -34,9 +34,11 @@ public class Tetris_Frame extends JFrame {
         cp.add(tp2);
         Thread thread1 = new Thread(tp);
         thread1.start();
-        Thread  thr2=new Thread(tp2);
 
+        Thread thr2=new Thread(tp2);
         thr2.start();
+
+
 
 
     }
