@@ -1,7 +1,6 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -22,6 +21,10 @@ public class P2 extends JPanel implements Runnable{
     /*  flag判斷方塊是否已放置*/
     private boolean flag = false;
     private int currentblock;
+    /* construct socket  */
+    private ServerSocket svs;
+    private Socket s;
+    private InputStream in;
     /*  新增方塊圖片檔*/
     private Image [] color = new Image[8];
     private final int shapes[][][]=new int[][][]{
@@ -63,7 +66,16 @@ public class P2 extends JPanel implements Runnable{
             }
     };
     public P2(){
-        rec();
+        /*  build socket  */
+        try{
+            svs = new ServerSocket(2525);
+            s = svs.accept();
+            in = s.getInputStream();
+        }catch(IOException ioe){
+            System.out.println("IOException: "+ioe.toString());
+        }
+
+//        rec();
         this.setLayout(null);
         this.setBackground(new Color(63, 61, 64));
         /*   指定圖片檔位置   */
@@ -83,6 +95,7 @@ public class P2 extends JPanel implements Runnable{
             io.printStackTrace();
         }
         /*  初始化背景陣列  */
+        rec();
         holdblock=-1;
         /*  宣告Timer  */
     }
@@ -152,11 +165,47 @@ public class P2 extends JPanel implements Runnable{
         x=4;y=0;
         repaint();
     }
-    public void down_Shift(){
-        y++;
+
+    void deLine() {
+        int row = 19, access1 = 0;
+        for (int i = 19; i >= 0; i--) {
+            int count = 0;
+            for (int j = 0; j < 10; j++) {
+                if (map[j][i] != 0) {
+                    count++;
+                }
+            }
+            if (count == 10) {
+                access1 = 1;
+                for (int j = 0; j < 10; j++) {
+                    map[j][i] = 0;
+                }
+            } else {
+                for (int j = 0; j < 10; j++) {
+                    map[j][row] = map[j][i];
+                }
+                row--;
+            }
+        }
+    }
+    public int down_Shift() {
+
+        int down = 0;
+        if (blow(x, y + 1, blockType, turnState) == 1) {
+            y++;
+            down = 1;
+        }
         repaint();
-
-
+        if (blow(x, y + 1, blockType, turnState) == 0 && blockPause < 1) {
+            blockPause++;
+        } else if (blow(x, y + 1, blockType, turnState) == 0 && blockPause > 0) {
+            setBlock(x, y, blockType, turnState);
+            rec();
+            deLine();
+            System.out.println("what");
+            down = 0;
+        }
+        return down;
     }
     public int blow(int x ,int y, int blockType,int turnState){
         for(int i=0;i<16;i++){
@@ -171,36 +220,85 @@ public class P2 extends JPanel implements Runnable{
         }
         return 1;
     }
-    public void fall_down(){
-        while (blow(x,y+1,blockType,turnState)==1){
+    public void fall_down() {
+        while (blow(x, y + 1, blockType, turnState) == 1) {
             y++;
-        }repaint();
-        if (blow(x,y+1,blockType,turnState)==0){
-
-            newBlock(nextblock);
 
         }
+        repaint();
+        if (blow(x, y + 1, blockType, turnState) == 0) {
+            setBlock(x, y, blockType, turnState);
+            rec();
+            deLine();
+        }
     }
-
+    public void setBlock(int x, int y, int blockType, int turnState) {
+        flag = true;
+        for (int i = 0; i < 16; i++) {
+            if (shapes[blockType][turnState][i] == 1) {
+                map[x + i % 4][y + i / 4] = blockType + 1;
+            }
+        }
+        System.out.println("setblock");
+    }
     @Override
     public void run() {
-        int i=0;
-        while(i==0){
-        rec();
-
+        while (true) {
+            rec();
         }
-
-
     }
+    public void r_Shift() {
+        if (blow(x + 1, y, blockType, turnState) == 1) {
+            x++;
+        }
+        repaint();
+    }
+    public void roTate() {
+        int tmpState = turnState;
+        tmpState = (turnState + 1) % 4;
+        if (blow(x, y, blockType, tmpState) == 1) {
+            turnState = tmpState;
+        } else {
+            if (x == 8 && blockType == 0) {
+                x--;
+                x--;
+                turnState = tmpState;
+            } else if (x > 5) {
+                --x;
+                turnState = tmpState;
+            } else if (x < 3) {
+                x++;
+                turnState = tmpState;
+            } else if (x > 6) {
+                x -= 2;
+                turnState = tmpState;
+            } else if (y == 17 && blockType == 0) {
+                y -= 1;
+                turnState = tmpState;
+            } else if (y == 18 && blockType == 0) {
+                y -= 2;
+                turnState = tmpState;
+            } else if (y == 19 && blockType == 0) {
+                y -= 2;
+                turnState = tmpState;
+            }
+        }
+        repaint();
+    }
+
+    public void l_Shift() {
+        if (blow(x - 1, y, blockType, turnState) == 1) {
+            x--;
+        }
+        repaint();
+    }
+
     public void rec(){
         byte buff[]=new byte[1024];
         try {
-            ServerSocket svs = new ServerSocket(2525);
-            Socket s=svs.accept();
-            InputStream in=s.getInputStream();
             int n=in.read(buff);
-            String str=new String(buff,0,n);
-            while(str!=null){
+            String str = new String(buff,0,n);
+            while(str != null){
                 switch (str){
                     case"@cmd-init":
                         initmap();
@@ -244,19 +342,51 @@ public class P2 extends JPanel implements Runnable{
                         str=null;
                         System.out.print(str+"\t");
                         break;
-                    case"downshift();":
+                    case"down_shift();":
                         down_Shift();
                         str=null;
                         break;
-                    case "y++":
-                        y++;
-                        repaint();
+                    case"fall_down();":
+                        fall_down();
                         str=null;
                         break;
+                    case"set":
+                        setBlock(x,y,blockType, turnState);
+                        str=null;
+                        break;
+                    case "l_Shift();":
+                        l_Shift();
+                        str=null;
+                        break;
+                    case "r_Shift();":
+                        r_Shift();
+                        str=null;
+                        break;
+                    case"roTate();":
+                        roTate();
+                        str=null;
+                        break;
+                    case"hold":
+                        if (holdblock >= 0 && changedblock == 1) {
+                            int temp;
+                            temp = holdblock;
+                            holdblock = blockType;
+                            blockType = temp;
+                            x = 4;
+                            y = 0;
+                            changedblock = 0;
+                        } else if (changedblock == 1) {
+                            holdblock = blockType;
+                            rec();
+                        }
+                        str=null;
+                        break;
+
                 }
 
             }
         }catch (Exception e){
+            System.out.println(e);
 
         }
     }
