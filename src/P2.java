@@ -381,7 +381,7 @@ public class P2 extends JPanel implements Runnable{
                         }
                         str=null;
                         break;
-
+//QQ
                 }
 
             }
