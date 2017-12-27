@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class P2 extends JPanel implements Runnable{
+
     public int map[][] = new int[10][20];
     /*  宣告方塊圖片  */
     private Image backimage1;
@@ -21,6 +22,7 @@ public class P2 extends JPanel implements Runnable{
     /*  flag判斷方塊是否已放置*/
     private boolean flag = false;
     private int currentblock;
+    private boolean delayflag=false;
     /* construct socket  */
     private ServerSocket svs;
     private Socket s;
@@ -245,6 +247,12 @@ public class P2 extends JPanel implements Runnable{
     public void run() {
         while (true) {
             rec();
+            if(delayflag==true){
+                 for(int i=0;i<10;i++){
+
+                 }delayflag=false;
+
+            }
         }
     }
     public void r_Shift() {
@@ -293,11 +301,13 @@ public class P2 extends JPanel implements Runnable{
         repaint();
     }
 
+
     public void rec(){
         byte buff[]=new byte[1024];
         try {
             int n=in.read(buff);
             String str = new String(buff,0,n);
+            delayflag=true;
             while(str != null){
                 switch (str){
                     case"@cmd-init":
@@ -383,6 +393,7 @@ public class P2 extends JPanel implements Runnable{
                         break;
 //QQ
                 }
+
 
             }
         }catch (Exception e){
