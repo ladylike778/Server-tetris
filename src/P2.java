@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -27,6 +28,7 @@ public class P2 extends JPanel implements Runnable{
     private ServerSocket svs;
     private Socket s;
     private InputStream in;
+    private OutputStream out;
     /*  新增方塊圖片檔*/
     private Image [] color = new Image[8];
     private final int shapes[][][]=new int[][][]{
@@ -73,6 +75,7 @@ public class P2 extends JPanel implements Runnable{
             svs = new ServerSocket(2525);
             s = svs.accept();
             in = s.getInputStream();
+
         }catch(IOException ioe){
             System.out.println("IOException: "+ioe.toString());
         }
@@ -165,7 +168,15 @@ public class P2 extends JPanel implements Runnable{
         changedblock = 1;
         turnState=0;
         x=4;y=0;
+        rec();
         repaint();
+
+    }
+    public int gameOver(int x, int y) {
+        if (blow(x, y, blockType, turnState) == 0) {
+            return 1;
+        }
+        return 0;
     }
 
     void deLine() {
@@ -205,6 +216,9 @@ public class P2 extends JPanel implements Runnable{
             rec();
             deLine();
             System.out.println("what");
+            for (int i=0;i<5;i++){
+
+            }
             down = 0;
         }
         return down;
@@ -240,6 +254,9 @@ public class P2 extends JPanel implements Runnable{
             if (shapes[blockType][turnState][i] == 1) {
                 map[x + i % 4][y + i / 4] = blockType + 1;
             }
+        }
+        for(int i=0;i<5;i++){
+
         }
         System.out.println("setblock");
     }
@@ -301,6 +318,17 @@ public class P2 extends JPanel implements Runnable{
         repaint();
     }
 
+
+    public void deli(String st) {
+        try {
+            out.write(st.getBytes());
+
+        } catch (Exception e) {
+            System.out.println("this is delivering problem");
+
+
+        }
+    }
 
     public void rec(){
         byte buff[]=new byte[1024];
@@ -391,6 +419,15 @@ public class P2 extends JPanel implements Runnable{
                         }
                         str=null;
                         break;
+                    case"gameover":
+                            initmap();
+                            for(int i=0;i<5;i++){
+
+                            }
+                            System.out.println("restart");
+                            str=null;
+                            break;
+
 //QQ
                 }
 
@@ -400,5 +437,6 @@ public class P2 extends JPanel implements Runnable{
             System.out.println(e);
 
         }
+
     }
 }

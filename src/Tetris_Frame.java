@@ -8,6 +8,10 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 public class Tetris_Frame extends JFrame {
     Container cp;
     int FrameW=1800,FrameH=900;
@@ -17,7 +21,7 @@ public class Tetris_Frame extends JFrame {
         init();
     }
     private void init (){
-        this.setTitle("Tetris Battle_v0.001");
+        this.setTitle("Server");
         this.setBounds(dim.width/2-FrameW/2,dim.height/2-FrameH/2,FrameW,FrameH);
 //        this.setBounds(0,0,FrameW,FrameH);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -44,6 +48,10 @@ public class Tetris_Frame extends JFrame {
     }
 }
 class TetrisPane extends JPanel implements KeyListener ,Runnable{
+    private OutputStream out;
+    private ServerSocket svs1;
+    private Socket s1;
+
     /*  宣告背景陣列  */
     public int map[][] = new int[10][20];
     /*  宣告方塊圖片  */
@@ -100,6 +108,14 @@ class TetrisPane extends JPanel implements KeyListener ,Runnable{
                      }
     };
     public TetrisPane() {
+        try{
+            svs1=new ServerSocket(2525);
+            s1=svs1.accept();
+            out=s1.getOutputStream();
+
+        }catch (Exception e){
+
+        }
         this.setLayout(null);
 //        this.setBackground(Color.BLACK);
         this.setBackground(new Color(63, 61, 64));
@@ -219,6 +235,7 @@ class TetrisPane extends JPanel implements KeyListener ,Runnable{
         nextblock = (int)(Math.random()*7);
         turnState=0;
         x=4;y=0;
+        deli("next" + Integer.toString(nextblock));
         if(gameOver(x,y)==1){
             initmap();
         }
@@ -235,6 +252,10 @@ class TetrisPane extends JPanel implements KeyListener ,Runnable{
             blockPause++;
         }else if(blow(x,y+1,blockType,turnState)==0&&blockPause>0){
             setBlock(x,y,blockType,turnState);
+            deli("set");
+            for(int i=0;i<10;i++){
+
+            }
             newBlock();
             deLine();
             down=0;
@@ -342,18 +363,19 @@ class TetrisPane extends JPanel implements KeyListener ,Runnable{
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()){
             case KeyEvent.VK_DOWN:
-                down_Shift();
+                down_Shift();deli("down_shift();");
                 break;
             case KeyEvent.VK_LEFT:
-                l_Shift();
+                l_Shift();deli("l_Shift();");
                 break;
             case KeyEvent.VK_RIGHT:
-                r_Shift();
+                r_Shift();deli("r_Shift();");
                 break;
             case KeyEvent.VK_UP:
-                roTate();
+                roTate();deli("roTate();");
                 break;
             case KeyEvent.VK_SHIFT:
+                deli("hold");
                 if(holdblock>=0&&changedblock==1){
                     int temp;
                     temp=holdblock;
@@ -388,6 +410,7 @@ class TetrisPane extends JPanel implements KeyListener ,Runnable{
     class TimerListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             down_Shift();
+            deli("down_shift();");
             repaint();
 
         }
@@ -398,6 +421,14 @@ class TetrisPane extends JPanel implements KeyListener ,Runnable{
         } catch (InterruptedException e) {
             System.out.println("Unexcepted interrupt");
             System.exit(0);
+        }
+    }
+    public void deli(String st) {
+        try {
+            out.write(st.getBytes());
+
+        } catch (Exception e) {
+
         }
     }
 
